@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salud Vital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+
+    <div class="max-w-5xl mx-auto px-4 py-12">
+        <h1 class="text-3xl sm:text-4xl font-bold text-gray-800 text-center mb-10">
+            Monitoreo de <span class="text-[#007acc]">Signos Vitales</span>
+        </h1>
+        <div class="grid gap-6 sm:grid-cols-2">
+            <!-- Card: Oxigenación -->
+            <div class="bg-white shadow-md rounded-lg p-6 relative">
+                <div class="absolute top-4 right-4">
+                    <img src="oxygen.png" alt="Icono de oxigenación" class="h-10 w-10 object-contain">
+                </div>
+                <h2 class="text-2xl font-semibold text-gray-800">Oxigenación</h2>
+                <p class="text-gray-600 mt-2">Nivel actual de oxigenación en la sangre.</p>
+                <div class="mt-4">
+                    <span id="spO2-value" class="text-5xl font-bold text-[#007acc]"></span>
+                </div>
+            </div>
+
+            <!-- Card: Ritmo Cardiaco -->
+            <div class="bg-white shadow-md rounded-lg p-6 relative">
+                <div class="absolute top-4 right-4">
+                    <img src="health.png" alt="Icono de oxigenación" class="h-10 w-10 object-contain">
+                </div>
+                <h2 class="text-2xl font-semibold text-gray-800">Ritmo Cardiaco</h2>
+                <p class="text-gray-600 mt-2">Frecuencia de latidos por minuto.</p>
+                <div class="mt-4">
+                    <span  id="heartRate-value" class="text-5xl font-bold text-[#007acc]"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importar los módulos necesarios de Firebase
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js';
+        import { getDatabase, ref, query, orderByKey, limitToLast, get } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-database.js';
+    
+        // Tu configuración de Firebase (usa tu propia configuración)
+        const firebaseConfig = {
+        apiKey: "AIzaSyBbkNk6rZsffmo2z03YfCFB9JMR2jTDQ8Y",
+        authDomain: "esp-32-frecuencia.firebaseapp.com",
+        databaseURL: "https://esp-32-frecuencia-default-rtdb.firebaseio.com",
+        projectId: "esp-32-frecuencia",
+        storageBucket: "esp-32-frecuencia.firebasestorage.app",
+        messagingSenderId: "145979536709",
+        appId: "1:145979536709:web:51b61a0390073a30033a2c"
+        };
+    
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+    
+        // Obtener referencias a los elementos
+        const spO2ValueElement = document.getElementById("spO2-value");
+        const heartRateValueElement = document.getElementById("heartRate-value");
+    
+        // Función para obtener el último valor de SpO2
+        async function getLastSpO2() {
+          const spO2Ref = ref(database, 'datos/SpO2');
+          const spO2Query = query(spO2Ref, orderByKey(), limitToLast(1));
+          const snapshot = await get(spO2Query);
+          const data = snapshot.val();
+          if (data) {
+            const lastSpO2Key = Object.keys(data)[0];  // Obtenemos la última clave
+            const lastSpO2Value = data[lastSpO2Key];
+            spO2ValueElement.innerText = lastSpO2Value;
+          } else {
+            spO2ValueElement.innerText = "No hay datos disponibles";
+          }
+        }
+    
+        // Función para obtener el último valor de HeartRate
+        async function getLastHeartRate() {
+          const heartRateRef = ref(database, 'datos/heartRate');
+          const heartRateQuery = query(heartRateRef, orderByKey(), limitToLast(1));
+          const snapshot = await get(heartRateQuery);
+          const data = snapshot.val();
+          if (data) {
+            const lastHeartRateKey = Object.keys(data)[0];  // Obtenemos la última clave
+            const lastHeartRateValue = data[lastHeartRateKey];
+            heartRateValueElement.innerText = lastHeartRateValue;
+          } else {
+            heartRateValueElement.innerText = "No hay datos disponibles";
+          }
+        }
+    
+        // Función para actualizar los valores cada 4 segundos
+        function refreshValues() {
+          getLastSpO2();
+          getLastHeartRate();
+        }
+    
+        // Inicializar la primera carga de valores y luego refrescar cada 4 segundos
+        refreshValues();
+        setInterval(refreshValues, 4000);
+      </script>
+</body>
+
+</html>
