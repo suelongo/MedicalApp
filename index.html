@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Últimos Valores del Sensor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f8ff; /* Azul claro */
+      color: #00264d; /* Azul oscuro */
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #007acc; /* Azul médico */
+    }
+    h2 {
+      color: #005b99; /* Azul más oscuro */
+    }
+    p {
+      font-size: 1.8em;
+      color: #007acc;
+      font-weight: bold;
+    }
+    .container {
+      margin-top: 30px;
+    }
+    .value {
+      font-size: 2.5em;
+      color: #005b99;
+    }
+    .image-container {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .image-container img {
+      width: 150px;
+      height: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mediciones Cardiacas</h1>
+
+  <div class="container">
+    <h2>SpO2:</h2>
+    <p id="spO2-value" class="value">Cargando...</p>
+  </div>
+  
+  <div class="container">
+    <h2>Heart Rate:</h2>
+    <p id="heartRate-value" class="value">Cargando...</p>
+  </div>
+
+  <div class="image-container">
+    <img src="Animation - 1733119255897.gif" alt="Health Monitor">
+  </div>
+
+  <!-- Usar módulos de Firebase -->
+  <script type="module">
+    // Importar los módulos necesarios de Firebase
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-app.js';
+    import { getDatabase, ref, query, orderByKey, limitToLast, get } from 'https://www.gstatic.com/firebasejs/9.18.0/firebase-database.js';
+
+    // Tu configuración de Firebase (usa tu propia configuración)
+    const firebaseConfig = {
+    apiKey: "AIzaSyBbkNk6rZsffmo2z03YfCFB9JMR2jTDQ8Y",
+    authDomain: "esp-32-frecuencia.firebaseapp.com",
+    databaseURL: "https://esp-32-frecuencia-default-rtdb.firebaseio.com",
+    projectId: "esp-32-frecuencia",
+    storageBucket: "esp-32-frecuencia.firebasestorage.app",
+    messagingSenderId: "145979536709",
+    appId: "1:145979536709:web:51b61a0390073a30033a2c"
+    };
+
+    // Inicializar Firebase
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Obtener referencias a los elementos
+    const spO2ValueElement = document.getElementById("spO2-value");
+    const heartRateValueElement = document.getElementById("heartRate-value");
+
+    // Función para obtener el último valor de SpO2
+    async function getLastSpO2() {
+      const spO2Ref = ref(database, 'datos/SpO2');
+      const spO2Query = query(spO2Ref, orderByKey(), limitToLast(1));
+      const snapshot = await get(spO2Query);
+      const data = snapshot.val();
+      if (data) {
+        const lastSpO2Key = Object.keys(data)[0];  // Obtenemos la última clave
+        const lastSpO2Value = data[lastSpO2Key];
+        spO2ValueElement.innerText = lastSpO2Value;
+      } else {
+        spO2ValueElement.innerText = "No hay datos disponibles";
+      }
+    }
+
+    // Función para obtener el último valor de HeartRate
+    async function getLastHeartRate() {
+      const heartRateRef = ref(database, 'datos/heartRate');
+      const heartRateQuery = query(heartRateRef, orderByKey(), limitToLast(1));
+      const snapshot = await get(heartRateQuery);
+      const data = snapshot.val();
+      if (data) {
+        const lastHeartRateKey = Object.keys(data)[0];  // Obtenemos la última clave
+        const lastHeartRateValue = data[lastHeartRateKey];
+        heartRateValueElement.innerText = lastHeartRateValue;
+      } else {
+        heartRateValueElement.innerText = "No hay datos disponibles";
+      }
+    }
+
+    // Función para actualizar los valores cada 4 segundos
+    function refreshValues() {
+      getLastSpO2();
+      getLastHeartRate();
+    }
+
+    // Inicializar la primera carga de valores y luego refrescar cada 4 segundos
+    refreshValues();
+    setInterval(refreshValues, 4000);
+  </script>
+</body>
+</html>
